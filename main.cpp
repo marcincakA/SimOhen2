@@ -52,26 +52,13 @@ int main() {
 
     }
 
-    while(true) {
-        simulacia->print();
-        std::cout << "Press 'q' to quit, or 'f' to set a tile on fire, 'c' to continue, 's' to save" << std::endl;
-        std::cin >> userInput;
-        if (userInput == 'q') {
-            break;
-        } else if (userInput == 'f') {
-            int row, col;
-            std::cout << "Enter row and column for setFlame: ";
-            std::cin >> row >> col;
-            simulacia->setFlame(row, col);
-        } else if (userInput == 'c') {
-            simulacia->step();
-        } else if (userInput == 's') {
-            std::cout << "Enter a filename to save the simulation : ";
-            std::string fileName;
-            std::cin >> fileName;
-            simulacia->saveFile(fileName.c_str());
-        }
-    }
+    std::thread mainThread(&Simulacia::getUserInput, simulacia);
+    std::thread simulationThread(&Simulacia::runMutexLogic, simulacia);
+    std::thread simulationThread2(&Simulacia::printMutex, simulacia);
+
+    mainThread.join();
+    simulationThread.join();
+    simulationThread2.join();
 
     delete simulacia;
     return 0;

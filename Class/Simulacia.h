@@ -8,6 +8,9 @@
 #include <random>
 #include <iostream>
 #include <fstream>
+#include <mutex>
+#include <thread>
+#include <condition_variable>
 
 
 enum VietorEnum {
@@ -28,6 +31,11 @@ private:
     std::random_device rd;
     std::mt19937 gen;
     std::uniform_int_distribution<> dis;
+    std::string zadanyZnak;
+    std::mutex mutex;
+    std::mutex consoleMutex;
+    std::condition_variable cv, cv2;
+    bool isPrinting;
 
 public:
     Simulacia(int sizeX, int sizeY) : sizeX(sizeX), sizeY(sizeY) {
@@ -38,6 +46,8 @@ public:
         this->vietor = BEZVETRIE;
         this->gen = std::mt19937(rd());
         this->dis = std::uniform_int_distribution<>(0, 100);
+        this->zadanyZnak = ""; // pre mutex
+        this->isPrinting = true;
     };
     ~Simulacia() {
         // Deallocate memory for the 2D array
@@ -489,6 +499,68 @@ public:
         return true;
     }
 
+    void runMutexLogic() {
+        while(true) {
+            {
+                std::unique_lock<std::mutex> lock(mutex);
+                cv.wait(lock, [this] {return zadanyZnak != "";});
+                isPrinting = false;
+                cv2.notify_one();
+                lock.unlock();//
+                if (zadanyZnak == "q") {
+                    break;
+                } else if (zadanyZnak == "f") {
+                    int row, col;
+                    std::cout << "Enter row and column for setFlame: ";
+                    std::cin >> row >> col;
+                    setFlame(row, col);
+                } else if (zadanyZnak == "c") {
+                    zadanyZnak = "";
+                } else if (zadanyZnak == "s") {
+                    std::cout << "Enter a filename to save the simulation : ";
+                    std::string fileName;
+                    std::cin >> fileName;
+                    saveFile(fileName.c_str());
+                }
+                {
+                    std::unique_lock<std::mutex> lock(mutex);
+                    zadanyZnak = "";
+                    isPrinting = true;
+                }
+                cv2.notify_one();
+            }
+
+        }
+
+    }
+
+    void printMutex() {
+        //vykreslenie
+        while(true) {
+            {
+                std::unique_lock<std::mutex> lock(mutex);
+                cv2.wait(lock, [this] { return isPrinting == true; });
+                consoleMutex.lock();
+                this->step();
+                this->print();
+                consoleMutex.unlock();
+                std::this_thread::sleep_for(std::chrono::seconds(3));
+                cv2.notify_one();
+            }
+        }
+    }
+
+    void getUserInput() {
+        while(true) {
+            std::string userInput;
+            if(std::cin >> userInput)
+            {
+                std::lock_guard<std::mutex> lock(mutex);
+                zadanyZnak = userInput;
+            }
+            cv.notify_one();
+        }
+    }
 };
 
 

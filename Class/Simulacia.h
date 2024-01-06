@@ -121,6 +121,8 @@ public:
                 return;
             }
             biotop[x][y].setStav(POZIAR);
+        } else {
+            std::cout << "Zadana pozicia nie je validna" << std::endl;
         }
     }
 
@@ -197,7 +199,7 @@ public:
                 if (biotop[x][y + 1].isFlamable()) {
                     int pravdepodobnostPoziaru = dis(gen);
                     if (pravdepodobnostPoziaru <= 20) { // 20 percentna sanca na poziar
-                        biotop[x - 1][y].setStav(POZIAR);
+                        biotop[x][y + 1].setStav(POZIAR);
                     }
                 }
             }
@@ -216,7 +218,7 @@ public:
                 if (biotop[x + 1][y].isFlamable()) {
                     int pravdepodobnostPoziaru = dis(gen);
                     if (pravdepodobnostPoziaru <= 2) { // 2 percentna sanca na poziar
-                        biotop[x - 1][y].setStav(POZIAR);
+                        biotop[x +1][y].setStav(POZIAR);
                     }
                 }
             }
@@ -410,6 +412,7 @@ public:
                 regenerateBiotop(i, j);
             }
         }
+        this->pocetSimulacii++;
     }
 
     void saveFile(const char* fileName) {
@@ -432,12 +435,12 @@ public:
         std::cout << "Simulation saved!" << std::endl;
     }
 
-    void loadFile(const char* fileName) {
+    bool loadFile(const char* fileName) {
         std::ifstream file;
         file.open(fileName);
         if (!file.is_open()) {
             std::cerr << "invalid file name" << std::endl;
-            return;
+            return false;
         }
         // vymazeme najprv mapu aby sa vypraznila pamat
         for (int i = 0; i < sizeX; ++i) {
@@ -463,6 +466,7 @@ public:
             }
         }
         std::cout << "Simulation loaded!" << std::endl;
+        return true;
     }
 
 };

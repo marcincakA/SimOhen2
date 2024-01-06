@@ -32,7 +32,7 @@ private:
     std::mt19937 gen;
     std::uniform_int_distribution<> dis;
     std::string zadanyZnak;
-    std::mutex mutex;
+    std::mutex mutex, mutex2;
     std::mutex consoleMutex;
     std::condition_variable cv, cv2;
     bool isPrinting;
@@ -502,11 +502,12 @@ public:
     void runMutexLogic() {
         while(true) {
             {
-                std::unique_lock<std::mutex> lock(mutex);
-                cv.wait(lock, [this] {return zadanyZnak != "";});
-                isPrinting = false;
-                cv2.notify_one();
-                lock.unlock();//
+                std::unique_lock<std::mutex> lock2(mutex2);
+                cv.wait(lock2, [this] { return zadanyZnak != ""; });
+                {
+                    std::unique_lock<std::mutex> lock(mutex);
+                    isPrinting = false;
+                }
                 if (zadanyZnak == "q") {
                     break;
                 } else if (zadanyZnak == "f") {
@@ -527,11 +528,10 @@ public:
                     zadanyZnak = "";
                     isPrinting = true;
                 }
+
+            }
                 cv2.notify_one();
             }
-
-        }
-
     }
 
     void printMutex() {
@@ -539,14 +539,14 @@ public:
         while(true) {
             {
                 std::unique_lock<std::mutex> lock(mutex);
-                cv2.wait(lock, [this] { return isPrinting == true; });
-                consoleMutex.lock();
+                cv2.wait(lock, [this] { return isPrinting; });
                 this->step();
+                consoleMutex.lock();
                 this->print();
                 consoleMutex.unlock();
                 std::this_thread::sleep_for(std::chrono::seconds(3));
-                cv2.notify_one();
             }
+            cv2.notify_one();
         }
     }
 
@@ -555,7 +555,7 @@ public:
             std::string userInput;
             if(std::cin >> userInput)
             {
-                std::lock_guard<std::mutex> lock(mutex);
+                std::unique_lock<std::mutex> lock2(mutex2);
                 zadanyZnak = userInput;
             }
             cv.notify_one();

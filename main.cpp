@@ -1,8 +1,11 @@
 #include <iostream>
 #include "Class/Simulacia.h"
+#include "Class/my_socket.h"
 
 int main() {
     Simulacia* simulacia;
+    MySocket* mySocket = MySocket::createConnection("frios2.fri.uniza.sk", 12345);
+
     int pocetLesov, pocetLuk, pocetVod, pocetSkal, sizeX, sizeY;
     char userInput;
     std::cout << "Fire simluation!" << std::endl;
@@ -11,7 +14,7 @@ int main() {
     std::cout << "Press L to load a map from a file." << std::endl;
     std::cout << "Press Q to quit." << std::endl;
     std::cin >> userInput;
-    switch (userInput) {
+    switch (toupper(userInput)) {
         case 'C':
             std::cout << "Zadaj velkost X: " << std::endl;
             std::cin >> sizeX;
@@ -43,6 +46,7 @@ int main() {
             break;
         }
         case 'Q':
+            std::cout << "See you later!" << std::endl;
             return 0;
             break;
         default:
@@ -59,6 +63,8 @@ int main() {
     simulationThread.join();
 
     delete simulacia;
+    delete mySocket;
+    mySocket = nullptr;
     return 0;
 }
 

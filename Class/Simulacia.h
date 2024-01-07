@@ -496,6 +496,7 @@ public:
             }
         }
         std::cout << "Simulation loaded!" << std::endl;
+        file.close();
         return true;
     }
 

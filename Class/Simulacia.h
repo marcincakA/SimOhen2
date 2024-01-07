@@ -11,6 +11,7 @@
 #include <mutex>
 #include <thread>
 #include <condition_variable>
+#include <stdlib.h>
 
 
 enum VietorEnum {
@@ -35,7 +36,7 @@ private:
     std::mutex mutex, mutex2;
     std::mutex consoleMutex;
     std::condition_variable cv, cv2;
-    bool isPrinting;
+    bool isPrinting, exited = false;
 
 public:
     Simulacia(int sizeX, int sizeY) : sizeX(sizeX), sizeY(sizeY) {
@@ -504,20 +505,32 @@ public:
             {
                 std::unique_lock<std::mutex> lock(mutex);
                 //cv.wait(lock, [this] {return zadanyZnak != "";});
-                if (zadanyZnak == "q") {
-                    break;
-                } else if (zadanyZnak == "f") {
-                    int row, col;
-                    std::cout << "Enter row and column for setFlame: ";
-                    std::cin >> row >> col;
-                    setFlame(row, col);
-                } else if (zadanyZnak == "c") {
-                    zadanyZnak = "";
-                } else if (zadanyZnak == "s") {
-                    std::cout << "Enter a filename to save the simulation : ";
-                    std::string fileName;
-                    std::cin >> fileName;
-                    saveFile(fileName.c_str());
+                while(zadanyZnak != "") {
+                    isPrinting = false;
+                    std::cout << "Press F to set flame, C to continue, S to save and Q to quit" << std::endl;
+                    char znak;
+                    std::cin >> znak;
+                    if (znak == 'Q') {
+                        this->exited = true;
+                        this->isPrinting = true;
+                        cv.notify_one();
+                        return;
+                    } else if (znak == 'F') {
+                        int row, col;
+                        std::cout << "Enter row and column for setFlame: ";
+                        std::cin >> row >> col;
+                        setFlame(row, col);
+                    } else if (znak == 'C') {
+                        isPrinting = true;
+                        zadanyZnak = "";
+                        cv.notify_one();
+                        break;
+                    } else if (znak == 'S') {
+                        std::cout << "Enter a filename to save the simulation : ";
+                        std::string fileName;
+                        std::cin >> fileName;
+                        saveFile(fileName.c_str());
+                    }
                 }
                 zadanyZnak = "";
                 this->step();
@@ -540,12 +553,17 @@ public:
     void getUserInput() {
         while(true) {
             std::string userInput;
-            if(std::cin >> userInput)
             {
-                std::unique_lock<std::mutex> lock(mutex);
+                std::unique_lock<std::mutex> lock(mutex2);
+                cv.wait(lock, [this] {return isPrinting;});
+                if (exited){
+                    return;
+                }
+                std::cin >> userInput;
                 zadanyZnak = userInput;
+                lock.unlock();
+                cv.notify_one();
             }
-            cv.notify_one();
         }
     }
 };

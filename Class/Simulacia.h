@@ -502,12 +502,8 @@ public:
     void runMutexLogic() {
         while(true) {
             {
-                std::unique_lock<std::mutex> lock2(mutex2);
-                cv.wait(lock2, [this] { return zadanyZnak != ""; });
-                {
-                    std::unique_lock<std::mutex> lock(mutex);
-                    isPrinting = false;
-                }
+                std::unique_lock<std::mutex> lock(mutex);
+                //cv.wait(lock, [this] {return zadanyZnak != "";});
                 if (zadanyZnak == "q") {
                     break;
                 } else if (zadanyZnak == "f") {
@@ -523,31 +519,22 @@ public:
                     std::cin >> fileName;
                     saveFile(fileName.c_str());
                 }
-                {
-                    std::unique_lock<std::mutex> lock(mutex);
-                    zadanyZnak = "";
-                    isPrinting = true;
-                }
-
+                zadanyZnak = "";
+                this->step();
             }
-                cv2.notify_one();
-            }
+            this->printMutex();
+        }
     }
 
     void printMutex() {
         //vykreslenie
-        while(true) {
-            {
-                std::unique_lock<std::mutex> lock(mutex);
-                cv2.wait(lock, [this] { return isPrinting; });
-                this->step();
+        //while(true) {
+                //this->step();
                 consoleMutex.lock();
                 this->print();
                 consoleMutex.unlock();
                 std::this_thread::sleep_for(std::chrono::seconds(3));
-            }
-            cv2.notify_one();
-        }
+        //}
     }
 
     void getUserInput() {
@@ -555,7 +542,7 @@ public:
             std::string userInput;
             if(std::cin >> userInput)
             {
-                std::unique_lock<std::mutex> lock2(mutex2);
+                std::unique_lock<std::mutex> lock(mutex);
                 zadanyZnak = userInput;
             }
             cv.notify_one();

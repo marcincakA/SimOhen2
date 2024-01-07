@@ -54,11 +54,9 @@ int main() {
 
     std::thread mainThread(&Simulacia::getUserInput, simulacia);
     std::thread simulationThread(&Simulacia::runMutexLogic, simulacia);
-    std::thread simulationThread2(&Simulacia::printMutex, simulacia);
 
     mainThread.join();
     simulationThread.join();
-    simulationThread2.join();
 
     delete simulacia;
     return 0;

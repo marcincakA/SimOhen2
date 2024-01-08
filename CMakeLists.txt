@@ -16,4 +16,4 @@ set(PROJECT_SOURCES
 add_executable(SimOhen ${PROJECT_SOURCES} ${PROJECT_HEADERS})
 
 target_link_libraries(SimOhen pthread wsock32 ws2_32)
-add_executable(Server Server/Server.cpp)
+add_executable(Server Server/Server.c)

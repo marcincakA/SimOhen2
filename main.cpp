@@ -1,8 +1,11 @@
 #include <iostream>
 #include "Class/Simulacia.h"
+#include "Class/my_socket.h"
 
 int main() {
     Simulacia* simulacia;
+    MySocket* mySocket = MySocket::createConnection("frios2.fri.uniza.sk", 12345);
+
     int pocetLesov, pocetLuk, pocetVod, pocetSkal, sizeX, sizeY;
     char userInput;
     std::cout << "Fire simluation!" << std::endl;
@@ -11,7 +14,7 @@ int main() {
     std::cout << "Press L to load a map from a file." << std::endl;
     std::cout << "Press Q to quit." << std::endl;
     std::cin >> userInput;
-    switch (userInput) {
+    switch (toupper(userInput)) {
         case 'C':
             std::cout << "Zadaj velkost X: " << std::endl;
             std::cin >> sizeX;
@@ -43,6 +46,7 @@ int main() {
             break;
         }
         case 'Q':
+            std::cout << "See you later!" << std::endl;
             return 0;
             break;
         default:
@@ -52,28 +56,15 @@ int main() {
 
     }
 
-    while(true) {
-        simulacia->print();
-        std::cout << "Press 'q' to quit, or 'f' to set a tile on fire, 'c' to continue, 's' to save" << std::endl;
-        std::cin >> userInput;
-        if (userInput == 'q') {
-            break;
-        } else if (userInput == 'f') {
-            int row, col;
-            std::cout << "Enter row and column for setFlame: ";
-            std::cin >> row >> col;
-            simulacia->setFlame(row, col);
-        } else if (userInput == 'c') {
-            simulacia->step();
-        } else if (userInput == 's') {
-            std::cout << "Enter a filename to save the simulation : ";
-            std::string fileName;
-            std::cin >> fileName;
-            simulacia->saveFile(fileName.c_str());
-        }
-    }
+    std::thread mainThread(&Simulacia::getUserInput, simulacia);
+    std::thread simulationThread(&Simulacia::runMutexLogic, simulacia);
+
+    mainThread.join();
+    simulationThread.join();
 
     delete simulacia;
+    delete mySocket;
+    mySocket = nullptr;
     return 0;
 }
 

@@ -14,6 +14,7 @@ public:
     bool sendFile(const char* fileName);
     bool receiveFile(const char *fileName);
     void sendEndMessage();
+    SOCKET getSocket();
 protected:
     MySocket(SOCKET socket);
 private:

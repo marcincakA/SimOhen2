@@ -5,6 +5,7 @@
 #ifndef SIMOHENKLIENT_SIMULACIA_H
 #define SIMOHENKLIENT_SIMULACIA_H
 #include "Biotop.h"
+#include "my_socket.h"
 #include <random>
 #include <iostream>
 #include <fstream>
@@ -24,6 +25,7 @@ enum VietorEnum {
 class Simulacia {
 private:
     int sizeX, sizeY;
+    MySocket* mySocket;
     Biotop** biotop;
     VietorEnum vietor;
     unsigned int pocetSimulacii = 0;
@@ -38,7 +40,7 @@ private:
     bool isPrinting;
 
 public:
-    Simulacia(int sizeX, int sizeY) : sizeX(sizeX), sizeY(sizeY) {
+    Simulacia(int sizeX, int sizeY, MySocket* mySocket) : sizeX(sizeX), sizeY(sizeY), mySocket(mySocket) {
         biotop = new Biotop*[sizeX];
         for(int i = 0; i < sizeX; i++) {
             biotop[i] = new Biotop[sizeY];
@@ -445,7 +447,7 @@ public:
         this->pocetSimulacii++;
     }
 
-    void saveFile(const char* fileName) {
+    void saveFile(const char* fileName, MySocket* mySocketConstr) {
         std::ofstream file;
         file.open(fileName);
         if (!file.is_open()) {
@@ -459,6 +461,30 @@ public:
             for(int j = 0; j < this->sizeY; j++) {
                 file << biotop[i][j].getStav() << " ";
             }
+        }
+
+        if (mySocketConstr != nullptr) {  // Posielanie suboru na Server
+            file.close();
+
+            mySocketConstr->sendData("S");
+
+            std::fstream fileServ;
+            fileServ.open(fileName);
+            std::string contents((std::istreambuf_iterator<char>(fileServ)), std::istreambuf_iterator<char>());
+            std::cout<<"[LOG] : Transmission Data Size "<<contents.length()<<" Bytes.\n";
+
+            std::cout<<"[LOG] : Sending...\n";
+
+            int iResult = send(mySocketConstr->getSocket() , contents.c_str() , contents.length() , 0 );
+            if (iResult == SOCKET_ERROR) {
+                throw std::runtime_error("send failed with error: " + std::to_string(WSAGetLastError()) + "\n");
+            }
+            std::cout<<"[LOG] : Transmitted Data Size "<<iResult<<" Bytes.\n";
+
+            std::cout<<"[LOG] : File Transfer Complete.\n";
+
+            std::cout << "Simulation saved to the server!" << std::endl;
+            return;
         }
 
         file.close();
@@ -518,7 +544,18 @@ public:
                     std::cout << "Enter a filename to save the simulation : ";
                     std::string fileName;
                     std::cin >> fileName;
-                    saveFile(fileName.c_str());
+                    MySocket* socket = nullptr;
+
+                    if (mySocket != nullptr) {
+                        char goOnServer;
+                        std::cout << "Save to our server? Y for Yes: ";
+                        std::cin >> goOnServer;
+                        if (toupper(goOnServer) == 'Y') {
+                            socket = mySocket;
+                        }
+                    }
+
+                    saveFile(fileName.c_str(), socket);
                 }
                 zadanyZnak = "";
                 this->step();

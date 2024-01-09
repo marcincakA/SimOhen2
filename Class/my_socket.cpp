@@ -58,21 +58,6 @@ MySocket* MySocket::createConnection(std::string hostName, short port) {
     }
     std::cout << "Connected to the server! " << iResult << std::endl;
 
-    std::string data = "1";
-
-    size_t data_length = data.length();
-    char* buffer = (char*)calloc(data_length + 1, sizeof(char));
-    memcpy(buffer, data.c_str(), data_length);
-    buffer[data_length] = SOCKET_TERMINATE_CHAR;
-
-    iResult = send(connectSocket, buffer, data_length + 1, 0 );
-    if (iResult == SOCKET_ERROR) {
-        throw std::runtime_error("send failed with error: " + std::to_string(WSAGetLastError()) + "\n");
-    }
-    free(buffer);
-    buffer = NULL;
-
-
     return new MySocket(connectSocket);
 }
 
@@ -134,6 +119,9 @@ bool MySocket::sendFile(const char *fileName) {
 }
 
 bool MySocket::receiveFile(const char *fileName){
+
+    this->sendData("R");
+
     std::fstream file;
     file.open(fileName);
     if (!file.is_open()) {
@@ -149,6 +137,10 @@ bool MySocket::receiveFile(const char *fileName){
     file<<buffer;
     std::cout<<"[LOG] : File Saved.\n";
     return true;
+}
+
+SOCKET MySocket::getSocket() {
+    return connectSocket;
 }
 
 #undef SOCKET_TERMINATE_CHAR

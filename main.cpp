@@ -20,7 +20,7 @@ int main() {
             std::cin >> sizeX;
             std::cout << "Zadaj velkost Y: " << std::endl;
             std::cin >> sizeY;
-            simulacia = new Simulacia(sizeX, sizeY);
+            simulacia = new Simulacia(sizeX, sizeY, mySocket);
             std::cout << "Zadaj pravdepodobnost lesu: " << std::endl;
             std::cin >> pocetLesov;
             std::cout << "Zadaj pravdepodobnost luky: " << std::endl;
@@ -38,9 +38,22 @@ int main() {
             std::cout << "Enter a filename to load the simulation : ";
             std::string fileName;
             std::cin >> fileName;
-            simulacia = new Simulacia(0, 0);
+            if (mySocket != nullptr) {
+                char goOnServer;
+                std::cout << "Load from our server? Y for Yes: ";
+                std::cin >> goOnServer;
+                if (toupper(goOnServer) == 'Y') {
+                    if (mySocket->receiveFile(fileName.c_str())) {
+                        std::cout << "Nacitanie zo subora zo SERVERA prebehlo uspesne" << std::endl;
+                    }
+                    else {
+                        std::cerr << "Chyba pri nacitani suboru zo servera!" << std::endl;
+                    }
+                }
+            }
+            simulacia = new Simulacia(0, 0, mySocket);
             if (!simulacia->loadFile(fileName.c_str())) {
-                std::cout << "Chyba pri nacitani suboru" << std::endl;
+                std::cerr << "Chyba pri nacitani suboru" << std::endl;
                 return 1;
             }
             break;

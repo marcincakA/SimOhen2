@@ -57,6 +57,7 @@ public:
             delete[] biotop[i];
         }
         delete[] biotop;
+        delete mySocket;
     }
 
     bool positionIsValid(int x, int y) {

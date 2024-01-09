@@ -76,6 +76,7 @@ int main() {
     simulationThread.join();
 
     delete simulacia;
+    simulacia = nullptr;
     delete mySocket;
     mySocket = nullptr;
     return 0;

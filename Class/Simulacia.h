@@ -84,11 +84,12 @@ public:
                 biotop[i][j].setPosX(i);
                 biotop[i][j].setPosY(j);
                 biotop[i][j].setZhorena(false);
-                if (dis(gen) <= percentoLes) {
+                int pravdepodobnost = dis(gen);
+                if (pravdepodobnost <= percentoLes) {
                     biotop[i][j].setStav(LES);
-                } else if (dis(gen) <= percentoLuka) {
+                } else if (pravdepodobnost <= percentoLuka + percentoLes && pravdepodobnost > percentoLes) {
                     biotop[i][j].setStav(LUKA);
-                } else if (dis(gen) <= percentoSkala) {
+                } else if (pravdepodobnost <= percentoSkala + percentoLuka + percentoLes && pravdepodobnost > percentoLuka) {
                     biotop[i][j].setStav(SKALA);
                 } else {
                     biotop[i][j].setStav(VODA);
@@ -146,9 +147,7 @@ public:
                 this->vietor = BEZVETRIE;
                 return;
             }
-
-            if(this->vietor == BEZVETRIE) {
-
+            else {
                 int cislo = dis(gen);
                 if (cislo <= 90) {
                     this->vietor = BEZVETRIE;

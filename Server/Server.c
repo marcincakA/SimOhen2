@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr, cli_addr;
     int n;
     int status = 0; // 0 = idle; 1 = sending file; 2 = recieving file;
-    char buffer[256];
+    char buffer[1024];
 
     if (argc < 2)
     {
@@ -53,8 +53,8 @@ int main(int argc, char *argv[])
         }
 
         if (status == 0) {
-            bzero(buffer, 256);
-            n = recv(newsockfd, buffer, 256, 0);
+            bzero(buffer, 1024);
+            n = recv(newsockfd, buffer, 1024, 0);
             //n = read(newsockfd, buffer, 255);
             if (n < 0) {
                 perror("Error reading from socket");
@@ -77,7 +77,7 @@ int main(int argc, char *argv[])
                 printf("Sending file to client %d.\n", newsockfd - 3);
                 status = 2;
             } else if (strcmp(sprava, "S") == 0) {     // recieve file == Sending file to client
-                msg = "Recieving a file to client";
+                msg = "Recieving a file from client";
                 printf("Recieving a file to client %d.\n", newsockfd - 3);
                 status = 1;
             }

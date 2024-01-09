@@ -37,7 +37,7 @@ private:
     std::mutex mutex, mutex2;
     std::mutex consoleMutex;
     std::condition_variable cv, cv2;
-    bool isPrinting;
+    bool isPrinting, exited = false;
 
 public:
     Simulacia(int sizeX, int sizeY, MySocket* mySocket) : sizeX(sizeX), sizeY(sizeY), mySocket(mySocket) {
@@ -530,31 +530,45 @@ public:
             {
                 std::unique_lock<std::mutex> lock(mutex);
                 //cv.wait(lock, [this] {return zadanyZnak != "";});
-                if (zadanyZnak == "q") {
-                    break;
-                } else if (zadanyZnak == "f") {
-                    int row, col;
-                    std::cout << "Enter row and column for setFlame: ";
-                    std::cin >> row >> col;
-                    setFlame(row, col);
-                } else if (zadanyZnak == "c") {
-                    zadanyZnak = "";
-                } else if (zadanyZnak == "s") {
-                    std::cout << "Enter a filename to save the simulation : ";
-                    std::string fileName;
-                    std::cin >> fileName;
-                    MySocket* socket = nullptr;
+                while(zadanyZnak !="") {
+                    isPrinting = false;
+                    std::cout << "Press F to set flame, C to continue, S to save and Q to quit" << std::endl;
+                    char znak;
+                    std::cin.clear();
+                    std::cin >> znak;
+                    if (znak == 'Q') {
+                        this->exited = true;
+                        this->isPrinting = true;
+                        cv.notify_one();
+                        return;
+                    } else if (znak == 'F') {
+                        int row, col;
+                        std::cout << "Enter row and column for setFlame: ";
+                        std::cin >> row >> col;
+                        setFlame(row, col);
+                    } else if (znak == 'C') {
+                        isPrinting = true;
+                        zadanyZnak = "";
+                        std::cin.clear();
+                        cv.notify_one();
+                        break;
+                    } else if (znak == 'S') {
+                        std::cout << "Enter a filename to save the simulation : ";
+                        std::string fileName;
+                        std::cin >> fileName;
+                        MySocket* socket = nullptr;
 
-                    if (mySocket != nullptr) {
-                        char goOnServer;
-                        std::cout << "Save to our server? Y for Yes: ";
-                        std::cin >> goOnServer;
-                        if (toupper(goOnServer) == 'Y') {
-                            socket = mySocket;
+                        if (mySocket != nullptr) {
+                            char goOnServer;
+                            std::cout << "Save to our server? Y for Yes: ";
+                            std::cin >> goOnServer;
+                            if (toupper(goOnServer) == 'Y') {
+                                socket = mySocket;
+                            }
                         }
-                    }
 
-                    saveFile(fileName.c_str(), socket);
+                        saveFile(fileName.c_str(), socket);
+                    }
                 }
                 zadanyZnak = "";
                 this->step();
@@ -577,12 +591,22 @@ public:
     void getUserInput() {
         while(true) {
             std::string userInput;
-            if(std::cin >> userInput)
             {
-                std::unique_lock<std::mutex> lock(mutex);
-                zadanyZnak = userInput;
+                std::unique_lock<std::mutex> lock(mutex2);
+                cv.wait(lock, [this] {return isPrinting;});
+                if (exited){
+                    return;
+                }
+                if(std::cin >> userInput) {
+                    zadanyZnak = userInput;
+                }
+                else {
+                    std::cin.clear();
+                    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+                    zadanyZnak = "";
+                }
+                cv.notify_one();
             }
-            cv.notify_one();
         }
     }
 };

@@ -17,3 +17,10 @@ add_executable(SimOhen ${PROJECT_SOURCES} ${PROJECT_HEADERS})
 
 target_link_libraries(SimOhen pthread wsock32 ws2_32)
 add_executable(Server Server/Server.c)
+
+add_custom_target(All)
+add_custom_target(
+        Clean
+        COMMAND rm -f SimOhen
+        COMMAND rm -f Server
+)

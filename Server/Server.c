@@ -9,20 +9,6 @@
 #include <string.h>
 #include <errno.h>
 
-/*
-void transmit_file(){
-
-    std::string contents((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-    std::cout<<"[LOG] : Transmission Data Size "<<contents.length()<<" Bytes.\n";
-
-    std::cout<<"[LOG] : Sending...\n";
-
-    int bytes_sent = send(new_socket_descriptor , contents.c_str() , contents.length() , 0 );
-    std::cout<<"[LOG] : Transmitted Data Size "<<bytes_sent<<" Bytes.\n";
-
-    std::cout<<"[LOG] : File Transfer Complete.\n";
-}*/
-
 int main(int argc, char *argv[])
 {
     int sockfd, newsockfd;
@@ -128,6 +114,57 @@ int main(int argc, char *argv[])
             fclose(received_file);
             status = 0;
         } else if (status == 2) { // send
+
+            int subr = newsockfd - 3;
+            unsigned long fsize;
+            const char* fileName = subr + ".txt";
+            FILE* file;
+            file = fopen(fileName, "rb");
+            if (file == NULL)
+            {
+                printf("File not found!\n");
+                return 1;
+            }
+            else
+            {
+                printf("Found file %s\n", fileName);
+
+                fseek(file, 0, SEEK_END);
+                fsize = ftell(file);
+                rewind(file);
+
+                printf("File contains %ld bytes!\n", fsize);
+                printf("Sending the file now");
+            }
+
+            while (1)
+            {
+                int bytes_read = fread(buffer, sizeof(char),sizeof(buffer), file);
+                if (bytes_read == 0)
+                    break;
+
+                if (bytes_read < 0)
+                {
+                    printf("ERROR reading from file");
+                    return 9;
+                }
+
+                void *p_bytes = buffer;
+                while (bytes_read > 0)
+                {
+                    int bytes_written = write(sockfd, buffer, bytes_read);
+                    if (bytes_written <= 0)
+                    {
+                        printf("ERROR writing to socket\n");
+                        return 10;
+                    }
+                    bytes_read -= bytes_written;
+                    p_bytes += bytes_written;
+                }
+            }
+
+            printf("Done Sending the File!\n");
+            printf("Now Closing Connection.\n");
 
             status = 0;
         }

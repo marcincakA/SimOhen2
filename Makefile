@@ -1,15 +1,24 @@
-CC := g++
-CFLAGS := -std=c++11 -pthread
+CXX := g++
+CXXFLAGS := -std=c++11 -pthread
+EXECUTABLE_SIMULATION = SimOhen
+EXECUTABLE_SERVER = Server
 
-all : build
+SRC_FILES_SIMULATION = main.cpp my_socket.cpp
+SRC_FILES_SERVER = Server/Server.c
 
-build : SimOhen Server
+OBJ_FILES_SIMULATION = $(SRC_FILES_SIMULATION:.cpp=.o)
+OBJ_FILES_SERVER = $(SRC_FILES_SERVER:.cpp=.o)
 
-SimOhen : main.cpp
-	$(CC) $(CFLAGS) -o SimOhen main.cpp
+all: $(EXECUTABLE_SIMULATION) $(EXECUTABLE_SERVER)
 
-Server : Server.c
-	$(CC) $(CFLAGS) -o Server Server/Server.c
+$(EXECUTABLE_SIMULATION): $(OBJ_FILES_SIMULATION)
+    $(CXX) $(CXXFLAGS) -o $@ $^
 
-clean :
-	rm -f SimOhen Server
+$(EXECUTABLE_SERVER): $(OBJ_FILES_SERVER)
+    $(CXX) $(CXXFLAGS) -o $@ $^
+
+%.o: %.cpp
+    $(CXX) $(CXXFLAGS) -c -o $@ $<
+
+clean:
+    rm -f $(OBJ_FILES_SIMULATION) $(OBJ_FILES_SERVER) $(EXECUTABLE_SIMULATION) $(EXECUTABLE_SERVER)

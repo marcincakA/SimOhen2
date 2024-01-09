@@ -144,30 +144,30 @@ public:
     void windStep() {
         if(this->vietor != BEZVETRIE) {
             //vietor drzi svoj smer na tri tahy
-            if (this->zaciatokVetra == this->pocetSimulacii - 3) {
+            if (this->zaciatokVetra <= this->pocetSimulacii - 3) {
                 this->vietor = BEZVETRIE;
                 return;
             }
-            else {
-                int cislo = dis(gen);
-                if (cislo <= 90) {
-                    this->vietor = BEZVETRIE;
+
+        }
+
+        else {
+            int cislo = dis(gen);
+            if (cislo <= 90) {
+                this->vietor = BEZVETRIE;
+            } else {
+                int smerVetra = dis(gen);
+                if (smerVetra <= 25) {
+                    this->vietor = SEVER;
+                } else if (smerVetra <= 50) {
+                    this->vietor = VYCHOD;
+                } else if (smerVetra <= 75) {
+                    this->vietor = JUH;
                 } else {
-                    int smerVetra = dis(gen);
-                    if (smerVetra <= 25) {
-                        this->vietor = SEVER;
-                    } else if (smerVetra <= 50) {
-                        this->vietor = VYCHOD;
-                    } else if (smerVetra <= 75) {
-                        this->vietor = JUH;
-                    } else {
-                        this->vietor = ZAPAD;
-                    }
-                    this->zaciatokVetra = this->pocetSimulacii;
+                    this->vietor = ZAPAD;
                 }
+                this->zaciatokVetra = this->pocetSimulacii;
             }
-
-
         }
     }
 
@@ -175,10 +175,6 @@ public:
         //metodka co zoberie stav vetra a bunku na zaklade vetra zapali ostatne bunky
         if (!positionIsValid(x, y)) {
             std::cout << "Zadana pozicia nie je validna" << std::endl;
-            return;
-        }
-        if (!biotop[x][y].getStav() == POZIAR) {
-            std::cout << "Bunka nehori" << std::endl;
             return;
         }
 

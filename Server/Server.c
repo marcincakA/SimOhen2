@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
     struct sockaddr_in serv_addr, cli_addr;
     int n;
     int status = 0; // 0 = idle; 1 = sending file; 2 = recieving file;
-    char buffer[1024];
+    char buffer[2048];
 
     if (argc < 2)
     {
@@ -53,8 +53,8 @@ int main(int argc, char *argv[])
         }
 
         if (status == 0) {
-            bzero(buffer, 1024);
-            n = recv(newsockfd, buffer, 1024, 0);
+            bzero(buffer, 2048);
+            n = recv(newsockfd, buffer, 2048, 0);
             //n = read(newsockfd, buffer, 255);
             if (n < 0) {
                 perror("Error reading from socket");

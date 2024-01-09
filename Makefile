@@ -1,24 +1,26 @@
-CXX := g++
-CXXFLAGS := -std=c++11 -pthread
-EXECUTABLE_SIMULATION = SimOhen
-EXECUTABLE_SERVER = Server
+OSFLAG                 :=
+ifeq ($(OS),Windows_NT)
+    OSFLAG += WINDOWS
+else
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),Linux)
+        OSFLAG += LINUX
+    endif
+endif
 
-SRC_FILES_SIMULATION = main.cpp my_socket.cpp
-SRC_FILES_SERVER = Server/Server.c
+all: SimOhen Server
 
-OBJ_FILES_SIMULATION = $(SRC_FILES_SIMULATION:.cpp=.o)
-OBJ_FILES_SERVER = $(SRC_FILES_SERVER:.cpp=.o)
+SimOhen: main.cpp Biotop.h Simulacia.h my_socket.h my_socket.cpp
+    g++ main.cpp my_socket.cpp -o SimOhen -lws2_32
 
-all: $(EXECUTABLE_SIMULATION) $(EXECUTABLE_SERVER)
-
-$(EXECUTABLE_SIMULATION): $(OBJ_FILES_SIMULATION)
-    $(CXX) $(CXXFLAGS) -o $@ $^
-
-$(EXECUTABLE_SERVER): $(OBJ_FILES_SERVER)
-    $(CXX) $(CXXFLAGS) -o $@ $^
-
-%.o: %.cpp
-    $(CXX) $(CXXFLAGS) -c -o $@ $<
+Server: server.c
+    g++ server.c -o Server -lws2_32
 
 clean:
-    rm -f $(OBJ_FILES_SIMULATION) $(OBJ_FILES_SERVER) $(EXECUTABLE_SIMULATION) $(EXECUTABLE_SERVER)
+ifeq ($(OSFLAG),WINDOWS)
+    del SimOhen.exe
+    del Server.exe
+else ifeq ($(OSFLAG),LINUX)
+    rm SimOhen.exe
+    rm Server.exe
+endif
